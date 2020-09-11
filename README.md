@@ -25,11 +25,49 @@ Gattaca will yield two files that must be placed in the executable directory (ge
 
 Once these are placed within your simulation project move to Part 2.
 
-## Part 2: Execution
+## Part 2: Simulations
 
 While other java frameworks can be used or a port of the java code could be constructed for other simulation frameworks Gattaca is designed to work flawlessly within HAL. Thus an additional pre-requisite is [HAL](https://halloworld.org). Gattaca uses some random number generators and distributions from the Colt library ([Colt jar](https://dst.lbl.gov/ACSSoftware/colt/)) as well, which can be placed in the HAL lib directory. This can easily be linked from within ideaJ (instructions on linking libraries can be found from [HAL](https://halloworld.org) or ideaJ)
 
+Integration into HAL requires a few steps:
+1. Place the two output files from part 1 within the scope of your main executible class.
+2. From within your main function initialize the first clone, this provides a root clone for downstream tracking (also speeds up your simulations):
+```angular2html
+// The Gattaca constructor requires: parent, String, Hue, Saturation, Value, Rand RNG
+Gattaca initClone = new Gattaca(null, "", 1, 0, 0.3, RN);
+```
+3: Pass initClone into your Grid class. You will initialize clone1 using this, so that your first cell is constructed from within your grid using:
+```angular2html
+Gattaca clone1=new Gattaca(this.clone0, "",1,0,0.3, RN);
+Cell c=NewAgentSQ(xpt, ypt).Init(clone1, BIRTHPROBABILITY); // Birth cell with genome clone1
+c.genome.IncPop(); // Increases genome population by 1
+```
+4: Make sure that your cell class has a Gattaca variable.
+5: Increase and decrease the population of the genome using a cells genome DecPop() and IncPop() commands.
+6: From within your main model step. You can choose to record clones at any timepoint:
+```angular2html
+initClone.RecordClones(G.GetTick());
+```
+7: Output information to file:
+```angular2html
+String[] AttributesList = new String[]{"Genome", "H", "S", "V"};
+initClone.OutputClonesToCSV("/Users/rschenck/Dropbox/GATTACA/Gattaca/tests/GattacaEx/gattaca_output_fullyseeded." + Integer.toString(CON.SEED) + ".csv", AttributesList, (Gattaca g) -> {
+    return GetAttributes(g);
+}, 0);
 
+// Function to retrieve the attributes of your choice.
+public static String GetAttributes(Gattaca root) {
+        return root.PrivateGenome + "," + Double.toString(root.h) + "," + Double.toString(root.s)+ "," + Double.toString(root.v);
+}
+```
+
+## Part 3: Analysis
+
+Ideally, simulations will be ran in replicate for downstream statistical analysis, but a single simulation can also be handled by Gattaca analysis.
+
+```angular2html
+python value
+```
 
 ## Plan
 
