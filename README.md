@@ -1,6 +1,9 @@
 # Gattaca
 
-Gattaca is a method for tracking base pair resolution data within agent based simulations. It consists of three parts the setup, the execution, and the analysis.
+Gattaca is a method for tracking base pair resolution data within agent based simulations. It consists of three parts the 
+1. [Setup](# Part 1: Setup)
+2. [Simulations](# Part 2: Simulations)
+3. [Analysis](# Part 3: Analysis)
 
 ## Pre-requisites
 
