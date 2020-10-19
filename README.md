@@ -29,7 +29,10 @@ ref = /Users/rschenck/Desktop/BioinformaticsTools/References/GRCh37.75/Homo_sapi
 An example execution from within the Gattaca directory:
 
 ```bash
-python Gattaca.py --geneList ./tests/TestGenes.txt --genome=GRCh37.75 --contextFile=./Tests/MutContext.txt --mutRate=3.2E-9 --output="./
+python Gattaca.py --geneList ./tests/TestGenes.txt --genome=GRCh37.75 --contextFile=./Tests/MutContext.txt --mutRate=3.2E-9 --output=./
+
+# You can also get help my running:
+python Gattaca.py --help
 ```
 
 #### Part 1 Output
