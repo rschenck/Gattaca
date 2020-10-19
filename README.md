@@ -13,16 +13,23 @@ Gattaca depends on having a proper reference genome. That genome must match a sn
 2. Gunzip compressed primary genome assembly (recommended GRCh37 or GRCh38 from [Ensembl](https://www.ensembl.org/index.html), located from ftp download)
 3. [biopython](https://biopython.org/wiki/Download)
 4. [HAL](https://halloworld.org)
-5. [Colt jar](https://dst.lbl.gov/ACSSoftware/colt/) for use within HAL.
+5. [Colt jar](https://dst.lbl.gov/ACSSoftware/colt/) for use within HAL as ```cern.jet.random```.
 
 ## Part 1: Setup
 
 Change the directory locations for the pre-requisites in the ```usr_path.ini``` file. This will be the location of snpEff and the reference genome.
 
+```bash
+[snpeff]
+snpeff = /Users/rschenck/Desktop/BioinformaticsTools/snpEff/snpEff.jar
+[reference]
+ref = /Users/rschenck/Desktop/BioinformaticsTools/References/GRCh37.75/Homo_sapiens.GRCh37.75.dna.primary_assembly.fa.gz
+```
+
 An example execution from within the Gattaca directory:
 
-```angular2html
-python Gattaca.py --geneList ./tests/TestGenes.txt --genome=GRCh37.75 --contextFile=./Tests/MutContext.txt --mutRate=3.2E-9
+```bash
+python Gattaca.py --geneList ./tests/TestGenes.txt --genome=GRCh37.75 --contextFile=./Tests/MutContext.txt --mutRate=3.2E-9 --output="./
 ```
 
 #### Part 1 Output
