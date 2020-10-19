@@ -17,7 +17,7 @@ Gattaca depends on having a proper reference genome. That genome must match a sn
 
 ## Part 1: Setup
 
-Change the directory locations for the pre-requisites in the ```usr_path.ini``` file. This will be the location of snpEff and the reference genome.
+Change the directory locations for the pre-requisites in the ```usr_path.ini``` file. This will be the location of snpEff and the reference genome, shown below:
 
 ```bash
 [snpeff]
@@ -38,8 +38,8 @@ python Gattaca.py --help
 #### Part 1 Output
 
 Gattaca will yield two files that must be placed in the executable directory (generally /src) for simulations within HAL.
-1. Gattaca.java
-2. triNucsPos.csv
+1. ```Gattaca.java```
+2. ```triNucsPos.csv```
 
 Once these are placed within your simulation project move to Part 2.
 
