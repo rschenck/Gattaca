@@ -23,7 +23,8 @@ def Parser():
     parser = argparse.ArgumentParser()
 
     requiredNamed = parser.add_argument_group("Required Arguments")
-    geneList = parser.add_argument("-f", "--geneList", dest="geneList", default="./tests/TestGenes.txt", help="List of genes, one per line to use for Gattaca.")
+    geneList = parser.add_argument("-f", "--geneList", dest="geneList", default="./tests/TestGenes.txt", help="List of genes, one per line to use for Gattaca.", required=True)
+    output = parser.add_argument("-o", "--output", dest="outputLoc", default="./tests/GattacaEx/src/", help="Output directory for classes to be used with HAL.", required=True)
     genome = parser.add_argument("-g", "--genome", dest="genome", default="GRCh37.75", help="Reference genome to use.")
 
     outputNamed = parser.add_argument_group("Output options")
@@ -100,4 +101,4 @@ if __name__=="__main__":
     '''
     Last Step:
     '''
-    JavaCode([gene for gene in geneLocs.data], contexts.context, mutRates.geneMuts, contexts.triNucsProb, contexts.triNucsGenePos)
+    JavaCode([gene for gene in geneLocs.data], contexts.context, mutRates.geneMuts, contexts.triNucsProb, contexts.triNucsGenePos, Options.outputLoc)

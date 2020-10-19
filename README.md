@@ -10,9 +10,14 @@ Gattaca is a method for tracking base pair resolution data within agent based si
 Gattaca depends on having a proper reference genome. That genome must match a snpEff database. The following are dependencies.
 
 1. [snpEff](http://snpeff.sourceforge.net)
-2. Gunzip compressed primary genome assembly (recommended GRCh37 or GRCh38 from [Ensembl](https://www.ensembl.org/index.html))
+2. Gunzip compressed primary genome assembly (recommended GRCh37 or GRCh38 from [Ensembl](https://www.ensembl.org/index.html), located from ftp download)
+3. [biopython](https://biopython.org/wiki/Download)
+4. [HAL](https://halloworld.org)
+5. [Colt jar](https://dst.lbl.gov/ACSSoftware/colt/) for use within HAL.
 
 ## Part 1: Setup
+
+Change the directory locations for the pre-requisites in the ```usr_path.ini``` file. This will be the location of snpEff and the reference genome.
 
 An example execution from within the Gattaca directory:
 

@@ -6,13 +6,13 @@ from collections import OrderedDict
 
 class JavaCode:
 
-    def __init__(self, geneList, contextProbs, expectedMuts, triNucsProb, triNucsGenePos):
+    def __init__(self, geneList, contextProbs, expectedMuts, triNucsProb, triNucsGenePos, outDir):
         self.orderedVals = self._getProperOrder96(contextProbs, triNucsProb)
-        self.lines = self.getJavaCode(geneList, contextProbs, expectedMuts, triNucsProb, triNucsGenePos)
-        self.writeJavaClass()
+        self.lines = self.getJavaCode(geneList, contextProbs, expectedMuts, triNucsProb, triNucsGenePos, outDir)
+        self.writeJavaClass(outDir)
 
-    def getJavaCode(self, geneList, contextProbs, expectedMuts, triNucsProb, triNucsGenePos):
-        self._getGenePositions(triNucsGenePos, triNucsProb, geneList)
+    def getJavaCode(self, geneList, contextProbs, expectedMuts, triNucsProb, triNucsGenePos, outDir):
+        self._getGenePositions(triNucsGenePos, triNucsProb, geneList, outDir)
 
         head = "/**\n * Created by Gattaca (Ryan O. Schenck).\n */\n\nimport HAL.Tools.FileIO;\nimport cern.jet.random.Poisson;\nimport cern.jet.random.engine.DRand;\nimport cern.jet.random.engine.RandomEngine;\nimport HAL.Tools.PhylogenyTracker.Genome;\nimport HAL.Tools.MultinomialCalc;\nimport HAL.Rand;\n\nimport java.util.ArrayList;\n\n"
         part1 = "public class Gattaca extends Genome<Gattaca> {\n"
@@ -33,8 +33,8 @@ class JavaCode:
         end = "}"
         return("\n".join([head,part1,part2,part3,part5,part3b,part3c,part3d,part4,part4b,vars, self._constructor(), self._mutationFunction(triNucsProb), extraFuncs, end]))
 
-    def writeJavaClass(self):
-        with open('./tests/GattacaEx/src/Gattaca.java', 'w') as outfile:
+    def writeJavaClass(self, outDir):
+        with open(outDir + 'Gattaca.java', 'w') as outfile:
             outfile.write(self.lines)
 
     def _mutationFunction(self, triNucsProb):
@@ -59,7 +59,7 @@ class JavaCode:
 
         return((ordered,orderedValue))
 
-    def _getGenePositions(self, positions, triNucsProb, geneList):
+    def _getGenePositions(self, positions, triNucsProb, geneList, outDir):
         '''
         Access positions based on geneList, order in triNucsProb order. This will take the shape of:
         long[][][] where sizes are [gene][32contexts][allPositions] so { { { } }    }
@@ -94,7 +94,7 @@ class JavaCode:
         #
         # bases+="\n}"
 
-        with open("./tests/GattacaEx/src/triNucsPos.csv", "w") as outFile:
+        with open(outDir + "triNucsPos.csv", "w") as outFile:
             for j, gene in enumerate(geneList):
                 print("Writing gene position file: %s" %(gene))
 
