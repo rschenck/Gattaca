@@ -20,9 +20,9 @@ def Parser():
     parser = argparse.ArgumentParser()
 
     requiredNamed = parser.add_argument_group("Required Arguments")
-    inFile = parser.add_argument("-i", "--file", dest="inFile", default="./tests/stemCA.3.0/", help="Output file or directory from simulations.", required=False) #TODO change to true
-    output = parser.add_argument("-o", "--output", dest="output", default="./tests/stemCA.3.0/gattaca/", help="Destination for directory to be created.")
-    geneList = parser.add_argument("-f", "--geneList", dest="geneList", default="./tests/TestGenes.txt", help="List of genes, one per line to use for Gattaca.")
+    inFile = parser.add_argument("-i", "--file", dest="inFile", default="./tests/stemCA.3.0/", help="Output file or directory from simulations.", required=True) #TODO change to true
+    output = parser.add_argument("-o", "--output", dest="output", default="./tests/stemCA.3.0/gattaca/", help="Destination for directory to be created.", required=True)
+    geneList = parser.add_argument("-f", "--geneList", dest="geneList", default="./tests/TestGenes.txt", help="List of genes, one per line to use for Gattaca.", required=True)
     genome = parser.add_argument("-g", "--genome", dest="genome", default="GRCh37.75", help="Reference genome to use.")
     depth = parser.add_argument("-d", "--depth", dest="depth", default=500, help="Sequencing depth. Default 500.")
     depthDist = parser.add_argument("-k", "--depthFile", dest="depthFile", default=None, help="If a distribution for depth is desired use a file with one depth per variant per line.")
