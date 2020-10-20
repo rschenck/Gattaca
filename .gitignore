@@ -161,7 +161,7 @@ tmp.txt
 .idea/
 .idea/workspace.xml
 
-
-
+out/**
+Gattaca.iml
 
 
