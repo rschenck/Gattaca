@@ -388,22 +388,22 @@ if __name__=="__main__":
     if os.path.isdir(Options.output)==False:
         os.mkdir(Options.output)
 
-    # data = []
-    # if os.path.isfile(Options.inFile):
-    #     data = Data(Options)
-    # elif os.path.isdir(Options.inFile):
-    #     allFiles = glob.glob(Options.inFile + "*.csv")
-    #     Options2 = Options
-    #     for i in allFiles:
-    #         Options2.inFile = i
-    #         data.append(Data(Options2))
-    # else:
-    #     sys.exit("No input file(s) found.")
+    data = []
+    if os.path.isfile(Options.inFile):
+        data = Data(Options)
+    elif os.path.isdir(Options.inFile):
+        allFiles = glob.glob(Options.inFile + "*.csv")
+        Options2 = Options
+        for i in allFiles:
+            Options2.inFile = i
+            data.append(Data(Options2))
+    else:
+        sys.exit("No input file(s) found.")
     #
     #
     # # # TODO build endpoint table or table with all mutations.
     # pickle.dump(data, open('postProcess.p', 'wb')) # TODO Delete when done with dev
-    data = pickle.load(open('postProcess.p', 'rb')) # TODO Delete when done with dev
+    # data = pickle.load(open('postProcess.p', 'rb')) # TODO Delete when done with dev
     BuildOutputCloneData(Options, data)
     BuildOutputTable(Options, data, snpeff, refGenome)
 

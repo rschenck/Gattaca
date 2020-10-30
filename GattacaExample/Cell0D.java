@@ -15,23 +15,19 @@ class Cell0D extends Agent0D<ExampleModel0d> {
         return this;
     }
 
-    Cell0D Mutate(){
-        if (G.rn.Double() <  G.params.mu) {
-            // initiate new clone, with random color:
-            this.genome.DecPop();
-            this.genome = new Gattaca(this.genome, "", G.rn.Double(), G.rn.Double(), G.rn.Double(), G.rn);
-            this.genome.IncPop();
-        }
-        return this;
-    }
-
     Cell0D Divide(){
-        return G.NewAgent().Init(genome).Mutate();
+
+        Gattaca g = genome._RunPossibleMutation(G.GetTick());
+        Cell0D c = G.NewAgent().Init(g);
+
+        return c;
     }
 
     // constant death rate
     void Death() {
-        if (G.params.save_clonal_lineage) { this.genome.DecPop(); }
+        if (G.params.save_clonal_lineage) {
+            this.genome.DecPop();
+        }
         Dispose();
     }
 

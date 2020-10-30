@@ -78,7 +78,7 @@ public class ExampleModel3d extends AgentGrid3D<Cell3D> {
 
         for (int seed = 0; seed < sims; seed++) {
 
-            String foldername = masterfoldername + "seed" + Integer.toString((int) (seed)) + "/";
+            String foldername = masterfoldername; // + "seed" + Integer.toString((int) (seed)) + "/";
 
             dir = new File(foldername);
             boolean success = dir.mkdir();
