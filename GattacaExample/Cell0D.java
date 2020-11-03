@@ -4,7 +4,7 @@ import HAL.GridsAndAgents.Agent0D;
 
 class Cell0D extends Agent0D<ExampleModel0d> {
 
-    // each cell carries its own Gattaca genome:
+    // each cell carries its own GattacaExample.Gattaca genome:
     Gattaca genome;
 
     Cell0D Init(Gattaca self_genome){
@@ -14,7 +14,7 @@ class Cell0D extends Agent0D<ExampleModel0d> {
         }
         return this;
     }
-
+  
     Cell0D Divide(){
 
         Gattaca g = genome._RunPossibleMutation(G.GetTick());

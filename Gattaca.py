@@ -23,7 +23,7 @@ def Parser():
     parser = argparse.ArgumentParser()
 
     requiredNamed = parser.add_argument_group("Required Arguments")
-    geneList = parser.add_argument("-f", "--geneList", dest="geneList", default="./tests/TestGenes.txt", help="List of genes, one per line to use for Gattaca.", required=True)
+    geneList = parser.add_argument("-f", "--geneList", dest="geneList", default="./tests/TestGenes.txt", help="List of genes, one per line to use for GattacaExample.Gattaca.", required=True)
     output = parser.add_argument("-o", "--output", dest="outputLoc", default="./tests/GattacaEx/src/", help="Output directory for classes to be used with HAL.", required=True)
     genome = parser.add_argument("-g", "--genome", dest="genome", default="GRCh37.75", help="Reference genome to use.")
 
@@ -60,7 +60,7 @@ def ConfigSectionMap(section, Config):
 
 if __name__=="__main__":
     # Pull information about usr system files
-    localpath = os.path.abspath(__file__).replace('Gattaca.py', '')  # path to scripts working directory
+    localpath = os.path.abspath(__file__).replace('GattacaExample.Gattaca.py', '')  # path to scripts working directory
     Config = configparser.ConfigParser()
     Options = Parser()
     Config.read(localpath + "usr_paths.ini")

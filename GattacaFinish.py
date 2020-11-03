@@ -20,9 +20,9 @@ def Parser():
     parser = argparse.ArgumentParser()
 
     requiredNamed = parser.add_argument_group("Required Arguments")
-    inFile = parser.add_argument("-i", "--file", dest="inFile", default="./tests/stemCA.3.0/", help="Output file or directory from simulations.", required=False) #TODO change to true
-    output = parser.add_argument("-o", "--output", dest="output", default="./tests/stemCA.3.0/gattaca/", help="Destination for directory to be created.")
-    geneList = parser.add_argument("-f", "--geneList", dest="geneList", default="./tests/TestGenes.txt", help="List of genes, one per line to use for Gattaca.")
+    inFile = parser.add_argument("-i", "--file", dest="inFile", default="./tests/stemCA.3.0/", help="Output file or directory from simulations.", required=True) #TODO change to true
+    output = parser.add_argument("-o", "--output", dest="output", default="./tests/stemCA.3.0/gattaca/", help="Destination for directory to be created.", required=True)
+    geneList = parser.add_argument("-f", "--geneList", dest="geneList", default="./tests/TestGenes.txt", help="List of genes, one per line to use for GattacaExample.Gattaca.", required=True)
     genome = parser.add_argument("-g", "--genome", dest="genome", default="GRCh37.75", help="Reference genome to use.")
     depth = parser.add_argument("-d", "--depth", dest="depth", default=500, help="Sequencing depth. Default 500.")
     depthDist = parser.add_argument("-k", "--depthFile", dest="depthFile", default=None, help="If a distribution for depth is desired use a file with one depth per variant per line.")
@@ -360,7 +360,7 @@ def AnnotateVCF(Options, snpeff, inFile):
     return(out)
 
 def WriteVCF(Options, mutOut):
-    header = "##fileformat=VCFv4.2\n##fileDate=%s\n##source=Gattaca\n##reference=%s\n##contig=None\n##phasing=partial"%(time.asctime( time.localtime(time.time()) ),Options.genome)
+    header = "##fileformat=VCFv4.2\n##fileDate=%s\n##source=GattacaExample.Gattaca\n##reference=%s\n##contig=None\n##phasing=partial"%(time.asctime( time.localtime(time.time()) ),Options.genome)
     header2 = "##INFO=<ID=DP,Number=1,Type=Integer,Description=\"Total Depth\">\n##INFO=<ID=AF,Number=A,Type=Float,Description=\"Allele Frequency\">"
     header3 = "##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Genotype\">\n##FORMAT=<ID=DP,Number=1,Type=Integer,Description=\"Read Depth\">\n##FORMAT=<ID=VR,Number=1,Type=Integer,Description=\"Variant Read Depth\">"
     header4 = "#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\tALLSAMPLES"
@@ -383,7 +383,7 @@ if __name__=="__main__":
     snpeff = ConfigSectionMap(Config.sections()[0], Config)  # get annovar script paths
     refGenome = ConfigSectionMap(Config.sections()[1], Config)  # get reference genome
 
-    print("Processing Gattaca Outputs.")
+    print("Processing GattacaExample.Gattaca Outputs.")
 
     if os.path.isdir(Options.output)==False:
         os.mkdir(Options.output)
