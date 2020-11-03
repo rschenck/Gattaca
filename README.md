@@ -61,7 +61,9 @@ Cell c=NewAgentSQ(xpt, ypt).Init(clone1, BIRTHPROBABILITY); // Birth cell with g
 c.genome.IncPop(); // Increases genome population by 1
 ```
 4: Make sure that your cell class has a GattacaExample.Gattaca variable.
+
 5: Increase and decrease the population of the genome using a cells genome DecPop() and IncPop() commands.
+
 6: From within your main model step. You can choose to record clones at any timepoint:
 ```angular2html
 initClone.RecordClones(G.GetTick());
