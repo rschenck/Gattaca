@@ -4,7 +4,7 @@ import HAL.GridsAndAgents.AgentSQ3Dunstackable;
 
 class Cell3D extends AgentSQ3Dunstackable<ExampleModel3d> {
 
-    // each cell carries its own Gattaca genome:
+    // each cell carries its own GattacaExample.Gattaca genome:
     Gattaca genome;
 
     Cell3D Init(Gattaca self_genome){

@@ -15,9 +15,9 @@ public class GattacaExample  {
 
         ExampleModel0d.Nonspatial(totalTime, modifier, headless, TOTAL_SIMS, OVERWRITE);
 
-        ExampleModel2d.Square(totalTime, modifier, headless, TOTAL_SIMS, save_max_gifs, OVERWRITE);
-
-        ExampleModel3d.Cube(totalTime, modifier, headless, TOTAL_SIMS, save_max_gifs, OVERWRITE);
+//        ExampleModel2d.Square(totalTime, modifier, headless, TOTAL_SIMS, save_max_gifs, OVERWRITE);
+//
+//        ExampleModel3d.Cube(totalTime, modifier, headless, TOTAL_SIMS, save_max_gifs, OVERWRITE);
 
 
         return;

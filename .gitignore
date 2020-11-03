@@ -151,7 +151,7 @@ tests/GattacaEx/.Rhistory
 
 tests/stemCA/*.csv
 tests/fullseed/**
-tests/GattacaEx/**
+
 tests/quicktest/**
 tests/stemCA*/**
 tests/wounding/**
@@ -162,6 +162,10 @@ tmp.txt
 .idea/workspace.xml
 
 out/**
+GattacaExample.Gattaca.iml
+
+src/triNucsPos.csv
+GattacaExample/Gattaca.java
 Gattaca.iml
 
 

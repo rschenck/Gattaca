@@ -4,7 +4,7 @@ import HAL.GridsAndAgents.Agent0D;
 
 class Cell0D extends Agent0D<ExampleModel0d> {
 
-    // each cell carries its own Gattaca genome:
+    // each cell carries its own GattacaExample.Gattaca genome:
     Gattaca genome;
 
     Cell0D Init(Gattaca self_genome){
@@ -19,7 +19,7 @@ class Cell0D extends Agent0D<ExampleModel0d> {
         if (G.rn.Double() <  G.params.mu) {
             // initiate new clone, with random color:
             this.genome.DecPop();
-            this.genome = new Gattaca(this.genome, "", G.rn.Double(), G.rn.Double(), G.rn.Double(), G.rn);
+            this.genome = new Gattaca(this.genome, , G.rn.Double(), G.rn.Double(), G.rn.Double(), G.rn);
             this.genome.IncPop();
         }
         return this;

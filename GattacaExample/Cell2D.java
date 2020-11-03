@@ -3,7 +3,7 @@ package GattacaExample;
 import HAL.GridsAndAgents.AgentSQ2Dunstackable;
 class Cell2D extends AgentSQ2Dunstackable<ExampleModel2d> {
 
-    // each cell carries its own Gattaca genome:
+    // each cell carries its own GattacaExample.Gattaca genome:
     Gattaca genome;
 
     Cell2D Init(Gattaca self_genome){
