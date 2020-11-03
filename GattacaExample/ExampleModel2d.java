@@ -81,7 +81,7 @@ public class ExampleModel2d extends AgentGrid2D<Cell2D> {
 
         for (int seed = 0; seed < sims; seed++) {
 
-            String foldername = masterfoldername + "seed" + Integer.toString((int) (seed)) + "/";
+            String foldername = masterfoldername; // + "seed" + Integer.toString((int) (seed)) + "/";
 
             dir = new File(foldername);
             boolean success = dir.mkdir();

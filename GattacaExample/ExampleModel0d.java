@@ -37,11 +37,17 @@ public class ExampleModel0d extends AgentGrid0D<Cell0D> {
 
         rn = new Rand(seed);
 
-        common_ancestor_genome = new Gattaca(null, "", 0.5, 0.5, 0.3, rn);
+        // does not appear anywhere in simulation: (0 popsize)
+        common_ancestor_genome = new Gattaca(null, "test2", 0.5, 0.5, 0.3, rn);
 
         int cells = 0;
         while (cells < params.n0) {
-            NewAgent().Init(common_ancestor_genome);
+            Gattaca clone1=new Gattaca(common_ancestor_genome, "test",0.5, 0.5, 0.3, rn);
+
+            Cell0D c = NewAgent().Init(clone1);
+            c.genome.IncPop();
+
+
             cells++;
         }
     }
@@ -51,6 +57,7 @@ public class ExampleModel0d extends AgentGrid0D<Cell0D> {
         for (Cell0D c:this) {
             c.Step();
         }
+        IncTick();
         CleanShuffle(rn);
     }
 
@@ -69,7 +76,7 @@ public class ExampleModel0d extends AgentGrid0D<Cell0D> {
 
         for (int seed = 0; seed < sims; seed++) {
 
-            String foldername = masterfoldername + "seed" + Integer.toString((int) (seed)) + "/";
+            String foldername = masterfoldername; //+ "seed" + Integer.toString((int) (seed)) + "/";
 
             dir = new File(foldername);
             boolean success = dir.mkdir();
@@ -97,7 +104,8 @@ public class ExampleModel0d extends AgentGrid0D<Cell0D> {
 
                 // save clonal information in EvoFreq format:
                 if (p.save_clonal_lineage) {
-                    model.common_ancestor_genome.OutputClonesToCSV(foldername + "gattaca_output.csv", p.AttributesList, (Gattaca g) -> {
+                    String filename = foldername + "gattaca_output"+ seed +".csv";
+                    model.common_ancestor_genome.OutputClonesToCSV(filename, p.AttributesList, (Gattaca g) -> {
                         return GetAttributes(g);
                     }, p.IGNORE_CLONES_BELOW_SIZE);
                 }
