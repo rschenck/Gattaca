@@ -83,12 +83,26 @@ public static String GetAttributes(GattacaExample.Gattaca root) {
 
 ## Part 3: Analysis
 
+# TODO NEED TO FIX ERROR:
+```bash
+rschenck@Ryans-MacBook-Pro-2 Gattaca % python GattacaFinish.py -i ~/Downloads/0d/ -f ./tests/TestGenes.txt -o ~/Desktop/tmp --genome=GRCh37.75  
+Processing GattacaExample.Gattaca Outputs.
+Processing /Users/rschenck/Downloads/0d/gattaca_output3.csv
+Finished building lineages: 0.01 seconds
+Traceback (most recent call last):
+  File "GattacaFinish.py", line 399, in <module>
+    data.append(Data(Options2))
+  File "GattacaFinish.py", line 84, in __init__
+    self._getMutContexts()
+  File "GattacaFinish.py", line 166, in _getMutContexts
+    out[mut.split('.')[3]]+=1
+IndexError: list index out of range
+
+```
+
 Ideally, simulations will be ran in replicate for downstream statistical analysis, but a single simulation can also be handled by GattacaExample.Gattaca analysis.
 
 ```angular2html
 python value
 ```
 
-## Plan
-
-1d, 2d, 3d, gland vs stratified epithelia.
