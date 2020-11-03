@@ -60,7 +60,7 @@ def ConfigSectionMap(section, Config):
 
 if __name__=="__main__":
     # Pull information about usr system files
-    localpath = os.path.abspath(__file__).replace('GattacaExample.Gattaca.py', '')  # path to scripts working directory
+    localpath = os.path.abspath(__file__).replace('Gattaca.py', '')  # path to scripts working directory
     Config = configparser.ConfigParser()
     Options = Parser()
     Config.read(localpath + "usr_paths.ini")
