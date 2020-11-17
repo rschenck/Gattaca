@@ -14,7 +14,7 @@ class JavaCode:
     def getJavaCode(self, geneList, contextProbs, expectedMuts, triNucsProb, triNucsGenePos, outDir):
         self._getGenePositions(triNucsGenePos, triNucsProb, geneList, outDir)
 
-        head = "/**\n * Created by Gattaca (Ryan O. Schenck).\n */\n\nimport HAL.Tools.FileIO;\nimport cern.jet.random.Poisson;\nimport cern.jet.random.engine.DRand;\nimport cern.jet.random.engine.RandomEngine;\nimport HAL.Tools.PhylogenyTracker.Genome;\nimport HAL.Tools.MultinomialCalc;\nimport HAL.Rand;\n\nimport java.util.ArrayList;\n\n"
+        head = "/**\n * Created by Gattaca (Ryan O. Schenck).\n */\n\npackage %s\n\nimport HAL.Tools.FileIO;\nimport cern.jet.random.Poisson;\nimport cern.jet.random.engine.DRand;\nimport cern.jet.random.engine.RandomEngine;\nimport HAL.Tools.PhylogenyTracker.Genome;\nimport HAL.Tools.MultinomialCalc;\nimport HAL.Rand;\n\nimport java.util.ArrayList;\n\n"%(outDir.split('/')[len(outDir.split('/'))-1])
         part1 = "public class Gattaca extends Genome<Gattaca> {\n"
         part2 = "\tprivate static final int genomeComponents=%s;"%(len(geneList))
         part3 = "\tprivate static final String[] geneNames=new String[]{%s};"%(','.join(['"'+item+'"' for item in geneList]))
