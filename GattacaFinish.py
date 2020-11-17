@@ -35,6 +35,8 @@ def Parser():
 
     Options = parser.parse_args()  # main user args
 
+    Options.output=os.path.expanduser(Options.output)
+    Options.inFile=os.path.expanduser(Options.inFile)
     # try:
     #     Options.mutRate = float(Options.mutRate)
     # except:
@@ -385,13 +387,13 @@ if __name__=="__main__":
 
     print("Processing GattacaExample.Gattaca Outputs.")
 
-    if os.path.isdir(Options.output)==False:
-        os.mkdir(Options.output)
+    if os.path.isdir(os.path.expanduser(Options.output))==False:
+        os.mkdir(os.path.expanduser(Options.output))
 
     data = []
-    if os.path.isfile(Options.inFile):
+    if os.path.isfile(os.path.expanduser(Options.inFile)):
         data = Data(Options)
-    elif os.path.isdir(Options.inFile):
+    elif os.path.isdir(os.path.expanduser(Options.inFile)):
         allFiles = glob.glob(Options.inFile + "*.csv")
         Options2 = Options
         for i in allFiles:

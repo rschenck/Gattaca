@@ -1,4 +1,4 @@
-# GattacaExample.Gattaca
+# Gattaca
 
 GattacaExample.Gattaca is a method for tracking base pair resolution data within agent based simulations. It consists of three parts the 
 1. [Setup](#part-1-setup)
@@ -26,18 +26,18 @@ snpeff = /Users/rschenck/Desktop/BioinformaticsTools/snpEff/snpEff.jar
 ref = /Users/rschenck/Desktop/BioinformaticsTools/References/GRCh37.75/Homo_sapiens.GRCh37.75.dna.primary_assembly.fa.gz
 ```
 
-An example execution from within the GattacaExample.Gattaca directory:
+An example execution from within the Gattaca directory:
 
 ```bash
-python GattacaExample.Gattaca.py --geneList ./tests/TestGenes.txt --genome=GRCh37.75 --contextFile=./Tests/MutContext.txt --mutRate=3.2E-9 --output=./GattacaExample/
+python Gattaca.py --geneList ./tests/TestGenes.txt --genome=GRCh37.75 --contextFile=./Tests/MutContext.txt --mutRate=3.2E-9 --output=./GattacaExample/
 
 # You can also get help my running:
-python GattacaExample.Gattaca.py --help
+python Gattaca.py --help
 ```
 
 #### Part 1 Output
 
-GattacaExample.Gattaca will yield two files that must be placed in the executable directory (generally /src) for simulations within HAL.
+Gattaca will yield two files that must be placed in the executable directory (generally /src) for simulations within HAL.
 1. ```GattacaExample.Gattaca.java```
 2. ```triNucsPos.csv```
 
@@ -51,16 +51,16 @@ Integration into HAL requires a few steps:
 1. Place the two output files from part 1 within the scope of your main executible class.
 2. From within your main function initialize the first clone, this provides a root clone for downstream tracking (also speeds up your simulations):
 ```angular2html
-// The GattacaExample.Gattaca constructor requires: parent, String, Hue, Saturation, Value, Rand RNG
-GattacaExample.Gattaca initClone = new GattacaExample.Gattaca(null, "", 1, 0, 0.3, RN);
+// The Gattaca constructor requires: parent, String, Hue, Saturation, Value, Rand RNG
+Gattaca initClone = new Gattaca(null, "", 1, 0, 0.3, RN);
 ```
 3: Pass initClone into your Grid class. You will initialize clone1 using this, so that your first cell is constructed from within your grid using:
 ```angular2html
-GattacaExample.Gattaca clone1=new GattacaExample.Gattaca(this.clone0, "",1,0,0.3, RN);
+Gattaca clone1=new Gattaca(this.clone0, "",1,0,0.3, RN);
 Cell c=NewAgentSQ(xpt, ypt).Init(clone1, BIRTHPROBABILITY); // Birth cell with genome clone1
 c.genome.IncPop(); // Increases genome population by 1
 ```
-4: Make sure that your cell class has a GattacaExample.Gattaca variable.
+4: Make sure that your cell class has a Gattaca variable.
 
 5: Increase and decrease the population of the genome using a cells genome DecPop() and IncPop() commands.
 
@@ -71,12 +71,12 @@ initClone.RecordClones(G.GetTick());
 7: Output information to file:
 ```angular2html
 String[] AttributesList = new String[]{"Genome", "H", "S", "V"};
-initClone.OutputClonesToCSV("/Users/rschenck/Dropbox/GATTACA/GattacaExample.Gattaca/tests/GattacaEx/gattaca_output_fullyseeded." + Integer.toString(CON.SEED) + ".csv", AttributesList, (GattacaExample.Gattaca g) -> {
+initClone.OutputClonesToCSV("/Users/rschenck/Dropbox/GATTACA/Gattaca/tests/GattacaEx/gattaca_output_fullyseeded." + Integer.toString(CON.SEED) + ".csv", AttributesList, (Gattaca g) -> {
     return GetAttributes(g);
 }, 0);
 
 // Function to retrieve the attributes of your choice.
-public static String GetAttributes(GattacaExample.Gattaca root) {
+public static String GetAttributes(Gattaca root) {
         return root.PrivateGenome + "," + Double.toString(root.h) + "," + Double.toString(root.s)+ "," + Double.toString(root.v);
 }
 ```
@@ -86,7 +86,7 @@ public static String GetAttributes(GattacaExample.Gattaca root) {
 # TODO NEED TO FIX ERROR:
 ```bash
 rschenck@Ryans-MacBook-Pro-2 Gattaca % python GattacaFinish.py -i ~/Downloads/0d/ -f ./tests/TestGenes.txt -o ~/Desktop/tmp --genome=GRCh37.75  
-Processing GattacaExample.Gattaca Outputs.
+Processing Gattaca Outputs.
 Processing /Users/rschenck/Downloads/0d/gattaca_output3.csv
 Finished building lineages: 0.01 seconds
 Traceback (most recent call last):
@@ -100,7 +100,7 @@ IndexError: list index out of range
 
 ```
 
-Ideally, simulations will be ran in replicate for downstream statistical analysis, but a single simulation can also be handled by GattacaExample.Gattaca analysis.
+Ideally, simulations will be ran in replicate for downstream statistical analysis, but a single simulation can also be handled by Gattaca analysis.
 
 ```angular2html
 python value
