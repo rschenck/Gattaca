@@ -83,9 +83,13 @@ public static String GetAttributes(Gattaca root) {
 
 ## Part 3: Analysis
 
-Ideally, simulations will be ran in replicate for downstream statistical analysis, but a single simulation can also be handled by Gattaca analysis.
+Ideally, simulations will be ran in replicate for downstream statistical analysis, but a single simulation can also be handled by Gattaca analysis. 
+
+In this example, we have given the output directory name for our simulations from within HAL as ```./tests/GattacaEx/```. So this will house all of the Gattaca outputs.
+
+To process these samples using ```GattacaFinish.py``` we run the following from within the Gattaca directory (make sure you use the same arguments as Part 1 for ```-f``` and ```--genome``` options):
 
 ```angular2html
-python value
+python GattacaFinish.py -i ./tests/GattacaEx/ -f ./tests/TestGenes.txt -o ~/Desktop/tmp --genome=GRCh37.75
 ```
 
