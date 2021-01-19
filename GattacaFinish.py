@@ -37,6 +37,12 @@ def Parser():
 
     Options.output=os.path.expanduser(Options.output)
     Options.inFile=os.path.expanduser(Options.inFile)
+
+    if Options.output[len(Options.output)-1]!="/":
+        Options.output+="/"
+    if Options.inFile[len(Options.inFile)-1]!="/":
+        Options.inFile+="/"
+
     # try:
     #     Options.mutRate = float(Options.mutRate)
     # except:
