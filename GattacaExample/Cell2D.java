@@ -14,21 +14,15 @@ class Cell2D extends AgentSQ2Dunstackable<ExampleModel2d> {
         return this;
     }
 
-    Cell2D Mutate(){
-        if (G.rn.Double() <  G.params.mu) {
-            // initiate new clone, with random color:
-            this.genome.DecPop();
-            this.genome = new Gattaca(this.genome, "", G.rn.Double(), G.rn.Double(), G.rn.Double(), G.rn);
-            this.genome.IncPop();
-        }
-        return this;
-    }
-
     Cell2D Divide(){
         int nDivOptions = G.MapEmptyHood(G.neighborhood,Xsq(),Ysq());
         if(nDivOptions==0){ return null; }
         int nextAgentID = G.neighborhood[G.rn.Int(nDivOptions)];
-        return G.NewAgentSQ(nextAgentID).Init(genome).Mutate();
+
+        Gattaca g = genome._RunPossibleMutation(G.GetTick());
+        Cell2D c = G.NewAgentSQ(nextAgentID).Init(g);
+
+        return c;
     }
 
     // constant death rate

@@ -10,12 +10,9 @@ import static HAL.Util.*;
 import java.io.File;
 
 class Parameters2D {
-
-    public double mu=(1e-4);
-
     public double BIRTH_RATE = 0.1;
-    public double DEATH_RATE = 0.099;
-    public int sideLen = 100;
+    public double DEATH_RATE = 0.05;
+    public int sideLen = 500;
     public int n0 = sideLen*sideLen;
     public double IGNORE_CLONES_BELOW_FRACTION = 0.0; // (this is dependent on domain size)
     public boolean save_clonal_lineage = true;
@@ -41,8 +38,8 @@ public class ExampleModel2d extends AgentGrid2D<Cell2D> {
 
         rn = new Rand(seed);
 
-        common_ancestor_genome = new Gattaca(null, "", 0.5, 0.5, 0.3, rn);
-
+        common_ancestor_genome = new Gattaca(null, "", 0.0, 0.0, 0.5, rn);
+        Gattaca clone1=new Gattaca(common_ancestor_genome, "",0.0, 0.0, 0.5, rn);
 
         int cells = 0;
         while (cells < params.n0) {
@@ -50,7 +47,7 @@ public class ExampleModel2d extends AgentGrid2D<Cell2D> {
             int cell_id = rn.Int(this.length);
             Cell2D c  = this.GetAgent(cell_id);
             if (c==null) {
-                NewAgentSQ(cell_id).Init(common_ancestor_genome);
+                NewAgentSQ(cell_id).Init(clone1);
                 cells++;
             }
 
@@ -75,13 +72,13 @@ public class ExampleModel2d extends AgentGrid2D<Cell2D> {
 
     public static void Square(int totalTime, int modifier, boolean headless, int sims, int save_max, boolean OVERWRITE) {
 
-        String masterfoldername = "2d/";
+        String masterfoldername = "./GattacaExample/2d/";
         File dir = new File(masterfoldername);
         dir.mkdir();
 
         for (int seed = 0; seed < sims; seed++) {
 
-            String foldername = masterfoldername; // + "seed" + Integer.toString((int) (seed)) + "/";
+            String foldername = masterfoldername;
 
             dir = new File(foldername);
             boolean success = dir.mkdir();
@@ -97,7 +94,7 @@ public class ExampleModel2d extends AgentGrid2D<Cell2D> {
                 int vis_dim = p.sideLen + 4;
                 UIGrid Vis = new UIGrid(vis_dim, vis_dim, p.drawing_scaling_factor);
                 UIWindow win = (seed < save_max) ? CreateWindow(headless, Vis) : null;
-                GifMaker smallGif = (seed < save_max) ? new GifMaker(foldername + "sim.gif", 100, true) : null;
+                GifMaker smallGif = (seed < save_max) ? new GifMaker(foldername + "sim"+seed+".gif", 100, true) : null;
 
                 for (int i = 0; i <= totalTime; i++) {
 
@@ -124,7 +121,7 @@ public class ExampleModel2d extends AgentGrid2D<Cell2D> {
                 // save clonal information in EvoFreq format:
                 if (p.save_clonal_lineage) {
                     if (seed < save_max) {
-                        model.common_ancestor_genome.OutputClonesToCSV(foldername + "gattaca_output.csv", p.AttributesList, (Gattaca g) -> {
+                        model.common_ancestor_genome.OutputClonesToCSV(foldername + "gattaca_output"+seed+".csv", p.AttributesList, (Gattaca g) -> {
                             return GetAttributes(g);
                         }, delete_thresh);
                     }

@@ -38,15 +38,14 @@ public class ExampleModel0d extends AgentGrid0D<Cell0D> {
         rn = new Rand(seed);
 
         // does not appear anywhere in simulation: (0 popsize)
-        common_ancestor_genome = new Gattaca(null, "test2", 0.5, 0.5, 0.3, rn);
+        common_ancestor_genome = new Gattaca(null, "", 0.5, 0.5, 0.3, rn);
+        Gattaca clone1=new Gattaca(common_ancestor_genome, "",0.5, 0.5, 0.3, rn);
 
         int cells = 0;
         while (cells < params.n0) {
-            Gattaca clone1=new Gattaca(common_ancestor_genome, "test",0.5, 0.5, 0.3, rn);
 
             Cell0D c = NewAgent().Init(clone1);
             c.genome.IncPop();
-
 
             cells++;
         }
@@ -70,13 +69,13 @@ public class ExampleModel0d extends AgentGrid0D<Cell0D> {
 
     public static void Nonspatial(int totalTime, int modifier, boolean headless, int sims, boolean OVERWRITE) {
 
-        String masterfoldername = "0d/";
+        String masterfoldername = "./GattacaExample/0d/";
         File dir = new File(masterfoldername);
         dir.mkdir();
 
         for (int seed = 0; seed < sims; seed++) {
 
-            String foldername = masterfoldername; //+ "seed" + Integer.toString((int) (seed)) + "/";
+            String foldername = masterfoldername;
 
             dir = new File(foldername);
             boolean success = dir.mkdir();
