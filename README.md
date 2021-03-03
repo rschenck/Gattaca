@@ -14,7 +14,7 @@ GattacaExample.Gattaca depends on having a proper reference genome. That genome 
 2. Gunzip compressed primary genome assembly (recommended GRCh37 or GRCh38 from [Ensembl](https://www.ensembl.org/index.html), located from ftp download)
 3. [biopython](https://biopython.org/wiki/Download)
 4. [HAL](https://halloworld.org)
-5. [Colt jar](https://dst.lbl.gov/ACSSoftware/colt/) for use within HAL as ```cern.jet.random```. Drag ```colt/lib/colt.jar``` file into ```HAL/lib``` directory.
+5. [Colt jar](https://dst.lbl.gov/ACSSoftware/colt/) for use within HAL as ```cern.jet.random```. Drag ```colt/lib/colt.jar``` file into ```HAL/lib``` directory once downloaded.
 
 ## Part 1: Setup
 

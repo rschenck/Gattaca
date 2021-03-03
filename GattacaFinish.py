@@ -284,12 +284,12 @@ class Data:
 
 def BuildOutputTable(Options, data, snpeff, refGenome):
     geneLocs = GeneLocs(Options, snpeff)
-    pickle.dump(geneLocs, open('file.p', 'wb'))  # TODO Delete when done with dev
-    geneLocs = pickle.load(open('file.p', 'rb'))  # TODO Delete when done with dev
+    # pickle.dump(geneLocs, open('file.p', 'wb'))  # TODO Delete when done with dev
+    # geneLocs = pickle.load(open('file.p', 'rb'))  # TODO Delete when done with dev
 
     fastaRec = FastaRecords(geneLocs, Options, snpeff, refGenome)
-    pickle.dump(fastaRec, open('file2.p', 'wb'))  # TODO Delete when done with dev
-    fastaRec = pickle.load(open('file2.p', 'rb'))  # TODO Delete when done with dev
+    # pickle.dump(fastaRec, open('file2.p', 'wb'))  # TODO Delete when done with dev
+    # fastaRec = pickle.load(open('file2.p', 'rb'))  # TODO Delete when done with dev
     revDict = {'t': 'a', 'a': 't', 'g': 'c', 'c': 'g'}
 
     outline = []

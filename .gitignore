@@ -243,4 +243,10 @@ Gattaca.iml
 GattacaExample/triNucsPos.csv
 
 
-
+GattacaExample/GattacaExample.iml
+GattacaExample.GattacaExample.iml
+*.iml
+GattacaExample/src/triNucsPos.csv
+GattacaExample/src/Gattaca.java
+**/triNucsPos.csv
+**/
