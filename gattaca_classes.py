@@ -47,7 +47,7 @@ class GeneLocs:
 
         print("Getting genomic positions for genes...")
 
-        cmd = ["java","-jar", snpeff['snpeff'], "genes2bed", "-t", Options.genome, ' '.join(genes)]
+        cmd = ["java","-jar", snpeff['snpeff'], "genes2bed", Options.genome, ' '.join(genes)]
         # print(' '.join(cmd))
         locInfo = os.popen(' '.join(cmd)).read()
 

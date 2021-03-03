@@ -10,6 +10,7 @@ GattacaExample.Gattaca is a method for tracking base pair resolution data within
 GattacaExample.Gattaca depends on having a proper reference genome. That genome must match a snpEff database. The following are dependencies.
 
 1. [snpEff](http://snpeff.sourceforge.net)
+   - It will help if you first download the reference genome that you are intending to use as this can take a while (ex: ```java -jar snpEff.jar download GRCh37.75```).
 2. Gunzip compressed primary genome assembly (recommended GRCh37 or GRCh38 from [Ensembl](https://www.ensembl.org/index.html), located from ftp download)
 3. [biopython](https://biopython.org/wiki/Download)
 4. [HAL](https://halloworld.org)
