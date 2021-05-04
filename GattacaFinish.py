@@ -13,7 +13,8 @@ from scipy.stats import binom, gamma, poisson
 import pickle
 import time
 from gattaca_classes import GeneLocs, FastaRecords
-
+import multiprocessing as mp
+import numpy as np
 
 def Parser():
     # get user variables
@@ -29,9 +30,9 @@ def Parser():
     cutoff = parser.add_argument("-c", "--cutoff", dest="cutoff", default=0.005, help="Minimum variant allele frequency (higher depth=lower cutoff recommended). Default is a generous 0.005.")
     name = parser.add_argument("-n", "--name", dest="name", default="gattacaRun", help="Name of run. Default=gattacaRun.")
     tmpts = parser.add_argument('-t', '--timepoints', dest="tmpts", nargs='+', help='List of timepoints. Leave blank if you only want the last timepoint.', required=False)
-    plots = parser.add_argument("-p", "--getPlots", dest="plots", default=True, action='store_false', help="Specifies whether to create a BAM file for use post simulation.")
+    plots = parser.add_argument("-p", "--getPlots", dest="plots", default=True, action='store_false', help="Specifies whether to create plots.")
     vcfs = parser.add_argument("-vcf", "--getvcfs", dest="vcfs", default=False, action='store_true', help="Whether or not to construct VCF files from mutations.")
-    verbose = parser.add_argument("-v", "--verbose", dest="verbose", default=True, action='store_false', help="Whether verbose output is turned on (development/debugging).")
+    verbose = parser.add_argument("-v", "--verbose", dest="verbose", default=False, action='store_true', help="Whether verbose output is turned on (development/debugging).")
 
     Options = parser.parse_args()  # main user args
 
@@ -40,7 +41,7 @@ def Parser():
 
     if Options.output[len(Options.output)-1]!="/":
         Options.output+="/"
-    if Options.inFile[len(Options.inFile)-1]!="/":
+    if Options.inFile[len(Options.inFile)-1]!="/" and Options.inFile[len(Options.inFile)-3:]!="csv":
         Options.inFile+="/"
 
     # try:
@@ -72,13 +73,21 @@ class Data:
         self.cloneIDs = None
         self.parentIDs = None
         self.parsedData = OrderedDict() # Holds clone information with full mutational genome
+        if Options.verbose:
+            print("Data has been parsed.")
         self._readFile()
+        if Options.verbose:
+            print("File has been read. Constructing lineages.")
         self.lineages = {}
-        start_time = time.clock()
-        self._buildLineages()
+        start_time = time.process_time()
+        self._smartLineages()
+        if Options.verbose:
+            print("Lineages have been constructed.")
+            print("Finished building lineages: %.8f seconds" % (time.process_time() - start_time))
+            sys.exit()
+
         self._buildFullTimepointGenome()
         self.contexts = self._getOrder()
-        print("Finished building lineages: %.2f seconds"%(time.clock()-start_time))
 
         # Stats
         '''Provides information on a per timepoint snapshot {time 1: {clone info}, time 2: {clone info}, etc.}'''
@@ -88,12 +97,12 @@ class Data:
         self.popSize = []
         self.mutContexts = []
         self.VAFs = []
-        start_time = time.clock()
+        start_time = time.process_time()
         self._getMutContexts()
-        print("Finished extracting mutation contexts: %.2f seconds"%(time.clock()-start_time))
-        start_time = time.clock()
+        print("Finished extracting mutation contexts: %.2f seconds"%(time.process_time()-start_time))
+        start_time = time.process_time()
         self._getRawVAFs(Options)
-        print("Finished getting VAFs: %.2f seconds"%(time.clock()-start_time))
+        print("Finished getting VAFs: %.2f seconds"%(time.process_time()-start_time))
         # Get Muts per clone per timepoint
 
     def _readFile(self):
@@ -112,7 +121,6 @@ class Data:
             self.parentIDs.append(vals[5])
             self.parsedData.update({ int(vals[4]) : {'CloneID': vals[4], 'hsv':(vals[1],vals[2],vals[3]), 'ParentID': vals[5], 'Pops': [i for i in vals[idxTmptsStart:len(vals)]], 'Genome': vals[0], 'NumMuts': 0 }  })
 
-
     def _buildFullTimepointGenome(self):
         vals = [0 for i in range(0,99)]
         for i, c in enumerate(self.cloneIDs):
@@ -129,6 +137,45 @@ class Data:
 
     def _getClonesPrivateGenome(self, cloneID):
         return(self.parsedData[int(cloneID)]['Genome'])
+
+    def _smartLineages(self):
+        '''
+        Constructs lineages without having to iterate through the entire tree as a lot of clones will have info in childrens tree
+        :return:
+        '''
+        seen_clones = []
+        for i, clone in reversed(list(enumerate(self.cloneIDs))): # Go from the end backwards
+            lineage = [clone]
+            p = self.parentIDs[i]  # starting parent
+            p1 = p
+            lineage.append(p)
+
+            if clone in seen_clones:
+                pass # already added
+            else: # Not currently in any lineage information
+                while p!='0': # continue until parent is 0 and clone is 0
+                    # parent of every parent.
+                    p = self._getCloneIDofParent(p)
+                    lineage.append(p)
+
+                    seen_clones.append(p) # Record seen clone
+
+                self.lineages.update({clone:lineage})
+
+                for i in range(1,len(lineage)):
+                    try:
+                        test = self.lineages[lineage[i]]
+                    except KeyError:
+                        self.lineages.update({lineage[i]: lineage[i:]})
+
+                # print(lineage)
+                # sys.exit()
+
+            seen_clones.append(clone)  # Record seen clone
+            seen_clones.append(p1)  # Record seen clone
+
+            # print(lineage)
+        sys.exit("Here")
 
     def _buildLineages(self):
         for i, clone in enumerate(self.cloneIDs):
@@ -193,7 +240,7 @@ class Data:
         self.popSize.append(val)
 
     def _getRawVAFs(self, Options):
-        start_time = time.clock()
+        start_time = time.process_time()
         cellsWithMut = OrderedDict()
         for i, muts in enumerate(self.mutsAtTimepoint):
             theMuts={}
@@ -201,9 +248,9 @@ class Data:
                 theMuts.update({mut: {'cells': 0.0, 'rawVAF': 0.0, 'correctedVAF': 0.0, 'reads': 0, 'depth': 0}})
             cellsWithMut.update({i:theMuts})
         if(Options.verbose):
-            print("Setup muts: %.2f seconds"%(time.clock()-start_time))
+            print("Setup muts: %.2f seconds"%(time.process_time()-start_time))
 
-        start_time = time.clock()
+        start_time = time.process_time()
         for clone in self.parsedData: # Clone
             g = self.parsedData[int(clone)]['Genome'].split(';')
             for mut in g:
@@ -213,7 +260,7 @@ class Data:
                             cellsWithMut[i][mut]['cells']=int(val)
 
         if (Options.verbose):
-            print("Cells extracted: %.2f seconds" % (time.clock() - start_time))
+            print("Cells extracted: %.2f seconds" % (time.process_time() - start_time))
 
 
         # for i, muts in enumerate(self.mutsAtTimepoint):
@@ -228,7 +275,7 @@ class Data:
         #
         #     cellsWithMut.update({i:theMuts})
 
-        start_time = time.clock()
+        start_time = time.process_time()
         for t, tmpt in enumerate(self.tmpts):
             for mut in cellsWithMut[t]:
                 try:
@@ -252,12 +299,12 @@ class Data:
 
         self.VAFs = cellsWithMut
         if(Options.verbose):
-            print("Calculating VAFs: %.2f seconds"%(time.clock()-start_time))
+            print("Calculating VAFs: %.2f seconds"%(time.process_time()-start_time))
 
-        start_time = time.clock()
+        start_time = time.process_time()
         self._getCorrectedVAF(Options)
         if(Options.verbose):
-            print("Sampling and correcting VAFs: %.2f seconds"%(time.clock()-start_time))
+            print("Sampling and correcting VAFs: %.2f seconds"%(time.process_time()-start_time))
 
     def _getCorrectedVAF(self, Options):
         '''
@@ -391,25 +438,32 @@ if __name__=="__main__":
     snpeff = ConfigSectionMap(Config.sections()[0], Config)  # get annovar script paths
     refGenome = ConfigSectionMap(Config.sections()[1], Config)  # get reference genome
 
-    print("Processing GattacaExample.Gattaca Outputs.")
-
     if os.path.isdir(os.path.expanduser(Options.output))==False:
         os.mkdir(os.path.expanduser(Options.output))
+        if Options.verbose:
+            print("Output directory created.")
+    else:
+        if Options.verbose:
+            print("Output drictory found.")
 
     data = []
     if os.path.isfile(os.path.expanduser(Options.inFile)):
+        if Options.verbose:
+            print("Creating data class.")
         data = Data(Options)
     elif os.path.isdir(os.path.expanduser(Options.inFile)):
+
         allFiles = glob.glob(Options.inFile + "*.csv")
         Options2 = Options
+        if Options.verbose:
+            print("Directory found, creating data classes.")
         for i in allFiles:
             Options2.inFile = i
             data.append(Data(Options2))
     else:
         sys.exit("No input file(s) found.")
-    #
-    #
-    # # # TODO build endpoint table or table with all mutations.
+
+    # TODO build endpoint table or table with all mutations.
     # pickle.dump(data, open('postProcess.p', 'wb')) # TODO Delete when done with dev
     # data = pickle.load(open('postProcess.p', 'rb')) # TODO Delete when done with dev
     BuildOutputCloneData(Options, data)
