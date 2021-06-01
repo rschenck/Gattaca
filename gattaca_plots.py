@@ -180,7 +180,6 @@ class MutPropPlots:
             lawrenceRates.append(muts.lawrenceRates[gene])
             adjRates.append(muts.adjRates[gene])
 
-
         plt.plot(lengths, lawrenceRates, 'go', label="Mutation Rate")
         plt.plot(lengths, adjRates, 'bo', label="Mutation Rate")
         plt.xlabel("Length of gene")

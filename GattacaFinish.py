@@ -15,6 +15,9 @@ import time
 from gattaca_classes import GeneLocs, FastaRecords
 import multiprocessing as mp
 import numpy as np
+from numba import jit
+from tqdm import tqdm
+import psutil
 
 def Parser():
     # get user variables
@@ -27,7 +30,7 @@ def Parser():
     genome = parser.add_argument("-g", "--genome", dest="genome", default="GRCh37.75", help="Reference genome to use.")
     depth = parser.add_argument("-d", "--depth", dest="depth", default=500, help="Sequencing depth. Default 500.")
     depthDist = parser.add_argument("-k", "--depthFile", dest="depthFile", default=None, help="If a distribution for depth is desired use a file with one depth per variant per line.")
-    cutoff = parser.add_argument("-c", "--cutoff", dest="cutoff", default=0.005, help="Minimum variant allele frequency (higher depth=lower cutoff recommended). Default is a generous 0.005.")
+    cutoff = parser.add_argument("-c", "--cutoff", dest="cutoff", default=0.001, help="Minimum variant allele frequency (higher depth=lower cutoff recommended) This cutoff is for the Raw VAF, uncorrected. Default is a generous 0.001.")
     name = parser.add_argument("-n", "--name", dest="name", default="gattacaRun", help="Name of run. Default=gattacaRun.")
     tmpts = parser.add_argument('-t', '--timepoints', dest="tmpts", nargs='+', help='List of timepoints. Leave blank if you only want the last timepoint.', required=False)
     plots = parser.add_argument("-p", "--getPlots", dest="plots", default=True, action='store_false', help="Specifies whether to create plots.")
@@ -72,6 +75,7 @@ class Data:
         self.tmpts = None
         self.cloneIDs = None
         self.parentIDs = None
+        self.AllMuts = {}
         self.parsedData = OrderedDict() # Holds clone information with full mutational genome
         if Options.verbose:
             print("Data has been parsed.")
@@ -84,26 +88,25 @@ class Data:
         if Options.verbose:
             print("Lineages have been constructed.")
             print("Finished building lineages: %.8f seconds" % (time.process_time() - start_time))
-            sys.exit()
+        self._getGenomes()
+        if Options.verbose:
+            print("Genomes have been built.")
+            print("Finished building genomes: %.8f seconds" % (time.process_time() - start_time))
 
-        self._buildFullTimepointGenome()
-        self.contexts = self._getOrder()
+        self._getMutationsAtTimepoint()
 
         # Stats
-        '''Provides information on a per timepoint snapshot {time 1: {clone info}, time 2: {clone info}, etc.}'''
-        self.mutsAtTimepoint = []
+        self.contexts = self._getOrder()
+
+        # self.mutsAtTimepoint = []
         self.clonesWithMutsAtTimepoint = []
         self.popsWithMutsAtTimepoint = []
-        self.popSize = []
-        self.mutContexts = []
+        self.popSize = [] # Built in self._getMutContexts(); list of values at each timepoint
+        self.mutContexts = [] # list of context lists at each timepoint
         self.VAFs = []
-        start_time = time.process_time()
+
         self._getMutContexts()
-        print("Finished extracting mutation contexts: %.2f seconds"%(time.process_time()-start_time))
-        start_time = time.process_time()
         self._getRawVAFs(Options)
-        print("Finished getting VAFs: %.2f seconds"%(time.process_time()-start_time))
-        # Get Muts per clone per timepoint
 
     def _readFile(self):
         with open(self.data, "r") as theFile:
@@ -121,19 +124,6 @@ class Data:
             self.parentIDs.append(vals[5])
             self.parsedData.update({ int(vals[4]) : {'CloneID': vals[4], 'hsv':(vals[1],vals[2],vals[3]), 'ParentID': vals[5], 'Pops': [i for i in vals[idxTmptsStart:len(vals)]], 'Genome': vals[0], 'NumMuts': 0 }  })
 
-    def _buildFullTimepointGenome(self):
-        vals = [0 for i in range(0,99)]
-        for i, c in enumerate(self.cloneIDs):
-            # print("Building full genome for clone: " + c)
-            genome = self.parsedData[int(c)]['Genome']
-            assert int(self.lineages[c][0])==int(c), "Clones may not match Clone: %s, Ancestor 1st Clone: %s (these two should be equal)."%(c, ancestor[0])
-
-            for j, ancestor in enumerate([int(item) for item in self.lineages[c]]):
-                if ancestor!=int(c) and ancestor != 0:
-                    genome+=self._getClonesPrivateGenome(ancestor)
-
-            self.parsedData[int(c)]['Genome']=genome
-            self.parsedData[int(c)]['NumMuts']=len(genome.split(';'))
 
     def _getClonesPrivateGenome(self, cloneID):
         return(self.parsedData[int(cloneID)]['Genome'])
@@ -143,60 +133,53 @@ class Data:
         Constructs lineages without having to iterate through the entire tree as a lot of clones will have info in childrens tree
         :return:
         '''
-        seen_clones = []
-        for i, clone in reversed(list(enumerate(self.cloneIDs))): # Go from the end backwards
-            lineage = [clone]
-            p = self.parentIDs[i]  # starting parent
-            p1 = p
-            lineage.append(p)
+        clone_dict = dict(zip(self.cloneIDs, self.parentIDs))
 
-            if clone in seen_clones:
-                pass # already added
-            else: # Not currently in any lineage information
-                while p!='0': # continue until parent is 0 and clone is 0
-                    # parent of every parent.
-                    p = self._getCloneIDofParent(p)
-                    lineage.append(p)
-
-                    seen_clones.append(p) # Record seen clone
-
-                self.lineages.update({clone:lineage})
-
-                for i in range(1,len(lineage)):
-                    try:
-                        test = self.lineages[lineage[i]]
-                    except KeyError:
-                        self.lineages.update({lineage[i]: lineage[i:]})
-
-                # print(lineage)
-                # sys.exit()
-
-            seen_clones.append(clone)  # Record seen clone
-            seen_clones.append(p1)  # Record seen clone
-
-            # print(lineage)
-        sys.exit("Here")
-
-    def _buildLineages(self):
-        for i, clone in enumerate(self.cloneIDs):
-            lineage = [clone]
-            p = self.parentIDs[i] # starting parent
-            lineage.append(p)
-            while p!='0': # continue until parent is 0 and clone is 0
-                # parent of every parent.
-                p = self._getCloneIDofParent(p)
+        for i in tqdm(range(len(self.cloneIDs)), desc="Building lineages"):
+            c = self.cloneIDs[i]
+            p = clone_dict[c]
+            lineage = [c, p]
+            while p!='0':
+                p = clone_dict[p] # get parents parent
                 lineage.append(p)
-            self.lineages.update({clone:lineage})
+            self.parsedData[int(c)].update({'Lineage':lineage})
 
-    def _getCloneIDofParent(self, parent):
-        for i, clone in enumerate(self.cloneIDs):
-            if clone==parent:
-                return(self.parentIDs[i])
+        clone_dict = None
 
-    def _IDoNotKnowWhatWasHere(self, clone):
-        for k, parent in enumerate(self.cloneIDs):
-            if parent==clone:
-                return(parent)
+    def _getGenomes(self):
+        '''
+        Constructs the full genome of this clone based off the lineage information
+        :return:
+        '''
+        clone_genome_dict = dict(zip(self.cloneIDs, [self.parsedData[int(c)]['Genome'] for c in self.cloneIDs]))
+
+        processed = []
+        for i in tqdm(range(len(self.cloneIDs)), desc="Building genomes; Mem=%s"%(psutil.virtual_memory().percent)):
+            c = self.cloneIDs[i]
+            genome = ''
+            l = self.parsedData[int(c)]['Lineage']
+            for ind_genome in l:
+                genome += clone_genome_dict[ind_genome]
+            self.parsedData[int(c)]['Genome']=genome
+
+        for val in list(set(clone_genome_dict.values())):
+            for v in val.split(';'):
+                self.AllMuts.update({v:{'Pop':dict(zip(self.tmpts,[0 for i in self.tmpts]))}})
+
+    def _getMutationsAtTimepoint(self):
+        '''
+        Gets the mutations that are at every timepoint and their pop at that timepoint
+        :return:
+        '''
+        for i in tqdm(range(len(self.cloneIDs)), desc="Building time data; Mem=%s"%(psutil.virtual_memory().percent)):
+            c = int(self.cloneIDs[i])
+            info = self.parsedData[c]
+            alive = [self.tmpts[int(i)] for i, val in enumerate(info['Pops']) if int(val)>0]
+            pops = [int(val) for i, val in enumerate(info['Pops']) if int(val)>0]
+            for mut in info['Genome'].split(';'):
+                for i, val in enumerate(info['Pops']):
+                    if int(val)>0:
+                        self.AllMuts[mut]['Pop'][self.tmpts[int(i)]] += int(val)
 
     def _getOrder(self):
         bases = ['A','C','G','T']
@@ -211,27 +194,17 @@ class Data:
     def _getMutContexts(self):
         for i, t in enumerate(self.tmpts):
             self._totalPop(i)
-            self._getMutationsAtTmpt(i)
 
             out = OrderedDict.fromkeys(self.contexts)
             for k in out:
                 out[k] = 0
-
-            for mut in self.mutsAtTimepoint[i]:
-                out[mut.split('.')[3]]+=1
-
             self.mutContexts.append(out)
-        # print(self.mutContexts)
 
-    def _getMutationsAtTmpt(self, timeIdx):
-        muts = []
-        for c in self.cloneIDs:
-            if int(self.parsedData[int(c)]['Pops'][timeIdx]) != 0:
-                m = self.parsedData[int(c)]['Genome'].split(';')
-                for singleMut in m:
-                    if singleMut != '':
-                        muts.append(singleMut)
-        self.mutsAtTimepoint.append(list(set(muts)))
+        # Place counts based on all muts
+        for mut in self.AllMuts:
+            for i, tmpt in enumerate(self.tmpts):
+                if self.AllMuts[mut]['Pop'][tmpt]!=0 and mut!='':
+                    self.mutContexts[i][mut.split('.')[3]]+=1
 
     def _totalPop(self, timeIdx):
         val = 0
@@ -240,117 +213,67 @@ class Data:
         self.popSize.append(val)
 
     def _getRawVAFs(self, Options):
-        start_time = time.process_time()
-        cellsWithMut = OrderedDict()
-        for i, muts in enumerate(self.mutsAtTimepoint):
-            theMuts={}
-            for mut in muts:
-                theMuts.update({mut: {'cells': 0.0, 'rawVAF': 0.0, 'correctedVAF': 0.0, 'reads': 0, 'depth': 0}})
-            cellsWithMut.update({i:theMuts})
-        if(Options.verbose):
-            print("Setup muts: %.2f seconds"%(time.process_time()-start_time))
+        '''
+        Goal, obtain the raw variant allele frequencies based on population numbers and individual numbers of cells with that mutation.
+        :param Options:
+        :return:
+        '''
+        muts = list(self.AllMuts.keys())
+        for i in tqdm(range(len(muts)), desc="Calculating variant allele frequencies; Mem=%s" % (psutil.virtual_memory().percent)):
+            thisMut = muts[i]
+            self.AllMuts[thisMut].update({'Seq':{}}) # Places a timepoint key
+            for idx, t in enumerate(self.AllMuts[thisMut]['Pop']):
+                if self.AllMuts[thisMut]['Pop'][t]!=0:
+                    n = self.popSize[idx]
+                    vaf = self.AllMuts[thisMut]['Pop'][t]/(2.*float(n))
+                    assert vaf<=1.0, "VAF Greater than 1.0 error: %s"%(vaf)
+                    reads,depth,corrected_vaf = self._getCorrectedVAF(Options, vaf)
+                    self.AllMuts[thisMut]['Seq'].update({t:{'rawVAF': vaf, 'correctedVAF': corrected_vaf, 'reads':reads,'depth':depth}})
 
-        start_time = time.process_time()
-        for clone in self.parsedData: # Clone
-            g = self.parsedData[int(clone)]['Genome'].split(';')
-            for mut in g:
-                if mut != '':
-                    for i, val in enumerate(self.parsedData[int(clone)]['Pops']):
-                        if int(val)>0:
-                            cellsWithMut[i][mut]['cells']=int(val)
-
-        if (Options.verbose):
-            print("Cells extracted: %.2f seconds" % (time.process_time() - start_time))
-
-
-        # for i, muts in enumerate(self.mutsAtTimepoint):
-        #     theMuts={}
-        #     for mut in muts:
-        #         theMuts.update({mut: {'cells': 0.0, 'rawVAF': 0.0, 'correctedVAF': 0.0, 'reads': 0, 'depth': 0}})
-        #         thePop = 0
-        #         for c in self.clonesWithMutsAtTimepoint[i]:
-        #             if mut in self.parsedData[int(c)]['Genome']:
-        #                 thePop+=int(self.parsedData[int(c)]['Pops'][i])
-        #         theMuts[mut]['cells']=thePop
-        #
-        #     cellsWithMut.update({i:theMuts})
-
-        start_time = time.process_time()
-        for t, tmpt in enumerate(self.tmpts):
-            for mut in cellsWithMut[t]:
-                try:
-                    cells = cellsWithMut[t][mut]['cells']
-                    diploidPop = 2.0*self.popSize[t]
-                    vaf = cells/diploidPop
-                    cellsWithMut[t][mut]['rawVAF']=vaf
-                except ZeroDivisionError:
-                    vaf = 0.0
-                    cellsWithMut[t][mut]['rawVAF']=vaf
-
-                if cellsWithMut[t][mut]['rawVAF'] > 1.0:
-                    print("DEBUG time: %s"%(t))
-                    print("DEBUG Cells: %s"%(cells))
-                    print("DEBUG VAF: %s"%(vaf))
-                    print("DEBUG MUT: %s"%(mut))
-                    print("Population: %s"%(self.popSize[t]))
-                    print(self.popsWithMutsAtTimepoint[t][mut])
-                    print(cellsWithMut[t][mut])
-                assert cellsWithMut[t][mut]['rawVAF'] <= 1.0, "VAF Greater than 1.0 error: %s"%(cellsWithMut[t][mut]['rawVAF'])
-
-        self.VAFs = cellsWithMut
-        if(Options.verbose):
-            print("Calculating VAFs: %.2f seconds"%(time.process_time()-start_time))
-
-        start_time = time.process_time()
-        self._getCorrectedVAF(Options)
-        if(Options.verbose):
-            print("Sampling and correcting VAFs: %.2f seconds"%(time.process_time()-start_time))
-
-    def _getCorrectedVAF(self, Options):
+    def _getCorrectedVAF(self, Options, vaf):
         '''
         Gets a corrected VAF based on the rawVAF using either a poisson distribution w/
         binomial or a gamma fit dist if options are selected
         :param Options: Command arguments
-        :return: None. Sets values in a dictionary.
+        :return: Corrected VAF, Reads, Depth
         '''
-        # TODO need to add GAMMA distribution fits from a file
-        if Options.depthFile!=None:
-            pass
+        if Options.depthFile != None:
+            pass # TODO need to add GAMMA distribution fits from a file
         else:
-            for t in self.VAFs:
-                for mut in self.VAFs[t]:
-                    vaf = self.VAFs[t][mut]['rawVAF']
-                    try:
-                        self.VAFs[t][mut]['reads'] = binom.rvs(Options.depth, vaf)
-                    except ValueError: # TODO vaf shouldn't ever be more than 1.0 but it is.
-                        self.VAFs[t][mut]['reads'] = binom.rvs(Options.depth, 1.0)
+            return(_getFastCorrectedVAF(Options.depth, vaf))
+            # reads = binom.rvs(Options.depth, vaf)
+            # depth = float(poisson.rvs(Options.depth))
+            # cvaf = reads/depth
+            # assert cvaf <= 1.0, "VAF Greater than 1.0 error: %s" % (cvaf)
+            # return([reads,depth,cvaf])
 
-                    self.VAFs[t][mut]['depth'] = float(poisson.rvs(Options.depth))
-                    # print("%s reads, %s depth"%(fi,Di))
-                    self.VAFs[t][mut]['correctedVAF'] = self.VAFs[t][mut]['reads']/self.VAFs[t][mut]['depth']
+@jit(nopython=True)
+def _getFastCorrectedVAF(depth, vaf):
+    d = float(np.random.poisson(depth))
+    reads = np.random.binomial(depth, vaf)
+    return(reads, d, reads/d)
+
 
 def BuildOutputTable(Options, data, snpeff, refGenome):
     geneLocs = GeneLocs(Options, snpeff)
-    # pickle.dump(geneLocs, open('file.p', 'wb'))  # TODO Delete when done with dev
-    # geneLocs = pickle.load(open('file.p', 'rb'))  # TODO Delete when done with dev
-
     fastaRec = FastaRecords(geneLocs, Options, snpeff, refGenome)
-    # pickle.dump(fastaRec, open('file2.p', 'wb'))  # TODO Delete when done with dev
-    # fastaRec = pickle.load(open('file2.p', 'rb'))  # TODO Delete when done with dev
     revDict = {'t': 'a', 'a': 't', 'g': 'c', 'c': 'g'}
 
     outline = []
     for i, sim in enumerate(data):
         if Options.tmpts==None: # Means we are getting every tmpt
-            for k, t in enumerate(sim.tmpts):
-                for v, mut in enumerate(sim.mutsAtTimepoint[k]):
-                    # Sample    Tmpt    Chrom   Pos Ref Alt Gene    Induction_t Trinuc TrinucTrue  RawVAF  CorrVAF Reads Depth
-                    mutInfo = mut.split('.')
-                    ref = mutInfo[3].split('[')[1].split('>')[0]
-                    alt = mutInfo[3].split('[')[1].split('>')[1].split(']')[0]
-                    vafDat = sim.VAFs[k][mut]
-                    val = [os.path.basename(sim.data).replace('.csv',''), t, mutInfo[4], mutInfo[5], ref, alt, mutInfo[2], mutInfo[0], mutInfo[3][0] + alt + mutInfo[3][6], mutInfo[3][0] + alt + mutInfo[3][6], vafDat['rawVAF'], vafDat['correctedVAF'], vafDat['reads'], vafDat['depth']]
-                    outline.append(val)
+            for m in sim.AllMuts:
+                mut = sim.AllMuts[m]
+                for t in mut['Pop']:
+                    if mut['Pop'][t]>0 and m!='':
+                        vafData = mut['Seq'][t]
+                        if mut['Seq'][t]['rawVAF']>Options.cutoff:
+                            # Sample    Tmpt    Chrom   Pos Ref Alt Gene    Induction_t Trinuc TrinucTrue  RawVAF  CorrVAF Reads Depth
+                            mutInfo = m.split('.')
+                            ref = mutInfo[3].split('[')[1].split('>')[0]
+                            alt = mutInfo[3].split('[')[1].split('>')[1].split(']')[0]
+                            val = [os.path.basename(sim.data).replace('.csv',''), t, mutInfo[4], mutInfo[5], ref, alt, mutInfo[2], mutInfo[0], mutInfo[3][0] + alt + mutInfo[3][6], mutInfo[3][0] + alt + mutInfo[3][6], vafData['rawVAF'], vafData['correctedVAF'], vafData['reads'], vafData['depth']]
+                            outline.append(val)
         else: # TODO build so that you get only specificed tmpts
             pass
 
@@ -386,6 +309,8 @@ def BuildOutputTable(Options, data, snpeff, refGenome):
             item = [str(i) for i in item]
             outfile.write("\t".join(item) + "\n")
 
+    print("Mutation table output to: %s"%(Options.output + "mutations.txt"))
+
 def BuildOutputCloneData(Options, data):
     outline = []
     for i, sim in enumerate(data):
@@ -396,6 +321,7 @@ def BuildOutputCloneData(Options, data):
     with open(Options.output + "mutations.clonal.txt", "w") as outCounts:
         outCounts.write('\t'.join(["Sample","CloneID", "ParentID", "NumMuts",'\t'.join([str(i) for i, v in enumerate('\t'.join(sim.parsedData[0]['Pops']))])]) + "\n")
         outCounts.write("\n".join(outline))
+    print("Clone data table output to %s"%(Options.output + "mutations.clonal.txt"))
 
 def AnnotateVCF(Options, snpeff, inFile):
     print("Annotating mutations...")
@@ -403,7 +329,7 @@ def AnnotateVCF(Options, snpeff, inFile):
     locInfo = os.popen(' '.join(cmd)).read()
     with open(inFile.replace('.vcf','.ann.vcf'), 'w') as outfile:
         outfile.write(locInfo)
-    print("Annotation Complete...")
+    print("Annotation Complete...file written to %s"%(inFile.replace('.vcf','.ann.vcf')))
     os.remove(inFile)
 
     out = {}
@@ -447,12 +373,11 @@ if __name__=="__main__":
             print("Output drictory found.")
 
     data = []
-    if os.path.isfile(os.path.expanduser(Options.inFile)):
+    if os.path.isfile(os.path.expanduser(Options.inFile)): # Individual files
         if Options.verbose:
             print("Creating data class.")
-        data = Data(Options)
-    elif os.path.isdir(os.path.expanduser(Options.inFile)):
-
+        data.append(Data(Options))
+    elif os.path.isdir(os.path.expanduser(Options.inFile)): # Multiple files
         allFiles = glob.glob(Options.inFile + "*.csv")
         Options2 = Options
         if Options.verbose:
@@ -462,13 +387,14 @@ if __name__=="__main__":
             data.append(Data(Options2))
     else:
         sys.exit("No input file(s) found.")
-
-    # TODO build endpoint table or table with all mutations.
+    #
+    # # # TODO build endpoint table or table with all mutations.
     # pickle.dump(data, open('postProcess.p', 'wb')) # TODO Delete when done with dev
+    # sys.exit()
     # data = pickle.load(open('postProcess.p', 'rb')) # TODO Delete when done with dev
     BuildOutputCloneData(Options, data)
     BuildOutputTable(Options, data, snpeff, refGenome)
-
+    sys.exit("Here")
     if Options.plots:
         build = Plots(Options,data)
         # build.mutContextMovie(Options, data)
