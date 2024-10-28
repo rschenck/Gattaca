@@ -13,7 +13,8 @@ class Mutations:
         return([gene for gene in geneData])
 
     def _getLawrenceRates(self):
-        with open("./data/Lawrence_et_al_2013.txt", "r") as inFile:
+       # with open("./data/Lawrence_et_al_2013.txt", "r") as inFile:
+        with open("/mnt/disks/maindisk1/home/cetienne/nsclc_rapidautopsy_gattaca/Gattaca/data/Lawrence_et_al_2013.txt", "r") as inFile:
             vals = inFile.readlines()
         out = dict()
         for line in vals:

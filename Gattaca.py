@@ -39,8 +39,12 @@ def Parser():
 
     Options = parser.parse_args()  # main user args
 
-    if Options.output[len(Options.output)-1]!="/":
-        Options.output+="/"
+   # Updated script due to variable naming  issues
+   # if Options.output[len(Options.output)-1]!="/":
+   #     Options.output+="/"
+
+    if Options.outputLoc[len(Options.outputLoc)-1] != "/":
+        Options.outputLoc += "/"
 
     try:
         Options.mutRate = float(Options.mutRate)
