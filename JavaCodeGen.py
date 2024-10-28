@@ -27,7 +27,10 @@ class JavaCode:
         part4 = "\tprivate static final String[] mutTypes=new String[]{%s};"%(','.join([repr(item) for item in self.orderedVals[0]]))
         part4b = "\tprivate static final double[] mutTypeProb=new double[]{%s};"%(','.join([repr(item) for item in self.orderedVals[1]]))
         part4 = part4.replace("'",'"')
-        part5 = "\tprivate static double[] expectedMuts=new double[]{%s};"%(','.join([repr(expectedMuts[item]) for item in geneList]))
+        #part5 = "\tprivate static double[] expectedMuts=new double[]{%s};"%(','.join([repr(expectedMuts[item]) for item in geneList]))
+        ## this part seems to be causing issue by adding the 'np.float64' in front of the values in the "Gattaca.java" output file.
+        ## so i decided to specifically convert the 'expectedMuts' values to plain floats before formatting them for the Java code"
+        part5 = "\tprivate static double[] expectedMuts=new double[]{%s};" % (','.join([repr(float(expectedMuts[item])) for item in geneList]))
 
         vars = "\n\tprivate static final String BaseIndexFile= System.getProperty(\"user.dir\") + \"/src/triNucsPos.csv\";\n\tprivate static final long[][][] basePositions=ParseTriNucFile();\n\tprivate Poisson[] PoissonDists;\n\tprivate RandomEngine RNEngine;\n\tprivate Rand RN;\n\tprivate MultinomialCalc picker;\n\n\tString PrivateGenome;\n\tdouble h;\n\tdouble s;\n\tdouble v;\n\tint[] triNucMuts;\n\tstatic double[] theMutOptions=new double[3];\n\tstatic double[] mutOptionsProbs=new double[3];\n\tint[] mutTypeHit;\n\tint mutIdx;\n\tString mutChosen;\n\tString mutChrom;\n\tString mutGene;\n\tlong mutPos;\n\tint mutations;"
 
